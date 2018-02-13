@@ -100,12 +100,6 @@ public:
         }
       }
     }
-
-    //FIXME: why is this causing a segfault?!
-    //FIXME: ugly c&p workaround above
-    // if (!this->isDirected) {
-    //   this->removeEdge(v, u);
-    // }
   }
 
   void print(bool detailed = false) const {

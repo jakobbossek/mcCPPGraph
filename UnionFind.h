@@ -9,23 +9,24 @@ class UnionFind {
 public:
   //FIXME: code optimization?
   //FIXME: add tests
-  //FIXME: unsigned int
   /**
    * General constructor.
    *
    * @param[in] n Number of elements.
+   * @param[in] pc Activate path compression?
    * @return Object of type UnionFind.
    */
-  UnionFind(int n) {
+  UnionFind(unsigned int n, bool pc = true) {
     assert(n >= 2);
 
     this->n = n;
     this->nsets = n;
+    this->pc = pc;
     // vector is zero based, i.e., we add a dummy element here
     // for simplification reasons
     this->root.reserve(n);
     this->size.reserve(n);
-    for (int i = 1; i <= n; ++i) {
+    for (unsigned int i = 1; i <= n; ++i) {
       this->root[i] = i;
       this->size[i] = 1;
     }
@@ -37,15 +38,26 @@ public:
    * @param[in] i Element.
    * @return Root element.
    */
-  int getRoot(int i) const {
+  int getRoot(unsigned int i) {
     assert(i >= 1 & i <= this->n);
 
-    //FIXME: path compression, i.e., if i is deeper in the tree,
     // propagate parent
-    while (i != root[i]) {
-      i = root[i];
+    unsigned int j = i;
+    while (j != root[j]) {
+      j = root[j];
     }
-    return i;
+
+    // iterate again. However, set pointer to root directly.
+    if (this->pc) {
+      unsigned int k = i;
+      while (k != root[k]) {
+        unsigned int tmp = k;
+        k = root[k];
+        root[tmp] = j;
+      }
+    }
+
+    return j;
   }
 
   /**
@@ -54,7 +66,7 @@ public:
    * @param i, j Elements.
    * @return Boolean indicating whether i and j are in the same set.
    */
-  bool find(int i, int j) const {
+  bool find(unsigned int i, unsigned int j) {
     return getRoot(i) == getRoot(j);
   }
 
@@ -63,29 +75,36 @@ public:
    *
    * @param i, j Set elements.
    */
-  void unite(int i, int j) {
+  void unite(unsigned int i, unsigned int j) {
+    // sanity checks
     assert(i >= 1 & i <= this->n);
     assert(j >= 1 & j <= this->n);
 
-    int root_i = getRoot(i);
-    int root_j = getRoot(j);
+    unsigned int root_i = getRoot(i);
+    unsigned int root_j = getRoot(j);
+
+    // only if not already in same set
     if (root_i != root_j) {
-      //FIXME: grow less high tree
-      root[root_j] = i;
-      size[i] += size[root_j];
+      if (size[i] < size[j]) {
+        root[root_j] = i;
+        size[i] += size[root_j];
+      } else {
+        root[root_i] = j;
+        size[j] += size[root_i];
+      }
       this->nsets -= 1;
     }
   }
 
   /// Printer for debugging.
-  void print() const {
+  void print() {
     std::cout << "UnionFind DS: n = " << this->n << std::endl;
     std::vector<bool> output(this->n);
-    for (int i = 1; i <= this->n; ++i) {
+    for (unsigned int i = 1; i <= this->n; ++i) {
       if (output[i]) {
         continue;
       }
-      for (int j = 1; j <= this->n; ++j) {
+      for (unsigned int j = 1; j <= this->n; ++j) {
         if (getRoot(j) == i) {
           std::cout << j << ", ";
           output[j] = true;
@@ -98,12 +117,14 @@ public:
 
 private:
   /// number of elements initially added
-  int n;
+  unsigned int n;
   /// number of sets
-  int nsets;
+  unsigned int nsets;
+  /// path compression flag
+  bool pc;
   /// pointers to root elements
-  std::vector<int> root;
+  std::vector<unsigned int> root;
   /// sizes of the set of each element
-  std::vector<int> size;
+  std::vector<unsigned int> size;
 };
 #endif
