@@ -2,13 +2,8 @@
 #include <cstdlib>
 #include <vector>
 #include <assert.h>
+#include "debug.h"
 #include "UnionFind.h"
-
-//FIXME: move to separate file
-#ifndef DEBUG_MODE
-#define DEBUG_MODE
-#define DEBUG(x) std::cerr << x << std::endl;
-#endif
 
 #ifndef GRAPH
 #define GRAPH
