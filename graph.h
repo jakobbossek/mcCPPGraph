@@ -71,6 +71,22 @@ public:
     return false;
   }
 
+  std::vector<std::pair<int, int>> getEdges() const {
+    std::vector<std::pair<int, int>> edges(this->getE());
+    int edgeCounter = 0;
+    for (int u = 1; u <= this->getV(); ++u) {
+      for (Edge edge : this->adjList[u]) {
+        int v = edge.first;
+        // if (u,v) with u < v already added, then (v, u) can be skipped
+        if (u < v) {
+          edges[edgeCounter] = {u, v};
+          edgeCounter += 1;
+        }
+      }
+    }
+    return edges;
+  }
+
   std::vector<int> getSumOfEdgeWeights() const {
     std::vector<int> sum(2);
     sum[0] = 0;
