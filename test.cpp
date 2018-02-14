@@ -29,7 +29,7 @@ int main() {
   Graph inducedg1 = g1.getInducedSubgraph(bfsres);
   std::vector<int> ss = inducedg1.getSumOfEdgeWeights();
   cout << ss[0] << ", " << ss[1] << endl;
-  Graph inducedg1mst = inducedg1.getMSTKruskal(1);
+  //Graph inducedg1mst = inducedg1.getMSTKruskal(1);
   inducedg1.print(true);
 
   // cout << "GRAPH INTERSECTION: " << endl;

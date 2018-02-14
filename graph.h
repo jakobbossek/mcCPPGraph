@@ -269,16 +269,35 @@ public:
     return g;
   }
 
-  //FIXME: weight -> lambda
-  //FIXME: weight needs to be double -> edge weights are double
   Graph getMSTKruskal(int weight) {
     assert(weight >= 0 && weight <= 1);
 
     // represent minimum spanning tree with graph object
-    Graph mst(this->getV(), this->getW(), false);
-
-    // init efficient set data structure
+    Graph initialTree(this->getV(), this->getW(), false);
     UnionFind UF(this->V);
+
+    return this->getMSTKruskal(weight, initialTree, UF);
+  }
+
+  Graph getMSTKruskal(int weight, Graph &initialTree) {
+    assert(weight >= 0 && weight <= 1);
+
+    std::vector<std::vector<int>> components = initialTree.getConnectedComponents();
+    UnionFind UF(this->V, components);
+
+    return this->getMSTKruskal(weight, initialTree, UF);
+  }
+
+  //FIXME: weight -> lambda
+  //FIXME: weight needs to be double -> edge weights are double
+  Graph getMSTKruskal(int weight, Graph &initialTree, UnionFind &UF) {
+    // assert(weight >= 0 && weight <= 1);
+
+    // // represent minimum spanning tree with graph object
+    // Graph mst(this->getV(), this->getW(), false);
+
+    // // init efficient set data structure
+    // UnionFind UF(this->V);
 
     // now we need to transform graph to list of edges which can be
     // sorted by weights
@@ -307,18 +326,18 @@ public:
         // link components
         //FIXME: here I need to return the original untransformed weights
         // I.e., "edgelist" should be triple std::vector<std::triple<int, std::pair<int, int>, std::pair<int, int>>>
-        mst.addEdge(u, v, it->first, it->first);
+        initialTree.addEdge(u, v, it->first, it->first);
         // merge components
         UF.unite(u, v);
       }
 
       // found spanning tree if number of edge is |V| - 1
-      if (mst.getE() == (this->getV() - 1)) {
+      if (initialTree.getE() == (this->getV() - 1)) {
         DEBUG("Tree has |V| - 1 edges, i.e., it is a spanning tree.");
         break;
       }
     }
-    return mst;
+    return initialTree;
   }
 private:
   int V;

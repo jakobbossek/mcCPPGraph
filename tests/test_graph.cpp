@@ -32,4 +32,30 @@ TEST(GraphTest, ConnectedComponents) {
   EXPECT_EQ(2, components.size());
 }
 
+TEST(MSTTest, BasicKruskal) {
+  unsigned int V = 5;
+  // All edges incident to node 1 are in MST regarding objective 1
+  Graph g(V, 2, false);
+  g.addEdge(1, 2, 1, 10);
+  g.addEdge(1, 3, 1, 10);
+  g.addEdge(1, 4, 1, 10);
+  g.addEdge(1, 5, 1, 10);
+  g.addEdge(2, 3, 10, 10);
+
+  Graph mstg = g.getMSTKruskal(1);
+  EXPECT_EQ(mstg.getE(), V - 1);
+  EXPECT_EQ(mstg.getDegree(1), V - 1);
+  EXPECT_EQ(mstg.getSumOfEdgeWeights()[0], 4);
+
+  // now add the costly edge (2,3) to initial tree
+  // I.e., (2, 3) must be in computed spanning tree
+  Graph g2(V, 2, false);
+  g2.addEdge(2, 3, 10, 10);
+
+  mstg = g.getMSTKruskal(1, g2);
+  EXPECT_EQ(mstg.getE(), V - 1);
+  EXPECT_EQ(mstg.getDegree(1), V - 2);
+  EXPECT_EQ(mstg.getSumOfEdgeWeights()[0], 13); // c(2, 3) + (|V| - 2) * 1 = 13
+}
+
 } // namespace
