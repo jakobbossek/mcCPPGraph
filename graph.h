@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <cstdlib>
 #include <vector>
@@ -117,6 +118,46 @@ public:
       }
     }
     std::cout << "Finalized" << std::endl;
+    return g;
+  }
+
+  static Graph importFromGrapheratorFile(std::string pathToFile) {
+    std::ifstream infile(pathToFile, std::ios::in);
+
+    char sep = ',';
+
+    // read first line (nnodes, nedges, nclusters, nweights)
+    int V, E, C, W;
+    infile >> V >> sep >> E >> sep >> C >> sep >> W;
+
+    // init graph
+    Graph g(V, W, false);
+
+    // now go to first character and ignore first 4 + |V| lines
+    // (meta data + node coordinates)
+    //FIXME: have a look ad ignore function
+    infile.seekg(0);
+    unsigned int linesToSkip = 4 + V;
+    if (C > 0)
+      linesToSkip += 1; // skip cluster membership
+    unsigned int curLine = 1;
+    std::string line;
+    while (curLine <= linesToSkip) {
+      std::getline(infile, line); // discard
+      curLine++;
+    }
+
+    // now we are ready to read edge costs section
+    //FIXME: generalize to >= 2 objectives
+    int u, v;
+    double c1, c2;
+
+    while (infile.good()) {
+      infile >> u >> sep >> v >> sep >> c1 >> sep >> c2;
+      g.addEdge(u, v, c1, c2);
+    }
+
+    infile.close();
     return g;
   }
 
@@ -269,7 +310,7 @@ public:
     return g;
   }
 
-  Graph getMSTKruskal(int weight) {
+  Graph getMSTKruskal(double weight) {
     assert(weight >= 0 && weight <= 1);
 
     // represent minimum spanning tree with graph object
@@ -279,7 +320,7 @@ public:
     return this->getMSTKruskal(weight, initialTree, UF);
   }
 
-  Graph getMSTKruskal(int weight, Graph &initialTree) {
+  Graph getMSTKruskal(double weight, Graph &initialTree) {
     assert(weight >= 0 && weight <= 1);
 
     std::vector<std::vector<int>> components = initialTree.getConnectedComponents();
@@ -288,9 +329,7 @@ public:
     return this->getMSTKruskal(weight, initialTree, UF);
   }
 
-  //FIXME: weight -> lambda
-  //FIXME: weight needs to be double -> edge weights are double
-  Graph getMSTKruskal(int weight, Graph &initialTree, UnionFind &UF) {
+  Graph getMSTKruskal(double weight, Graph &initialTree, UnionFind &UF) {
     // assert(weight >= 0 && weight <= 1);
 
     // // represent minimum spanning tree with graph object
@@ -305,7 +344,7 @@ public:
     for (int u = 1; u <= this->V; ++u) {
       for (int j = 0; j < this->adjList[u].size(); ++j) {
         // FIXME: ugly as sin! and restricted to two weights!
-        int costs = weight * this->adjList[u][j].second.first + (1 - weight) * this->adjList[u][j].second.second;
+        double costs = weight * this->adjList[u][j].second.first + (1 - weight) * this->adjList[u][j].second.second;
         // FIXME: how to remove duplicates!?
         edgelist.push_back({costs, {u, this->adjList[u][j].first}});
       }
@@ -322,7 +361,7 @@ public:
       int v = it->second.second;
 
       if (!UF.find(u, v)) {
-        DEBUG("Linking components");
+        //DEBUG("Linking components");
         // link components
         //FIXME: here I need to return the original untransformed weights
         // I.e., "edgelist" should be triple std::vector<std::triple<int, std::pair<int, int>, std::pair<int, int>>>
@@ -333,7 +372,7 @@ public:
 
       // found spanning tree if number of edge is |V| - 1
       if (initialTree.getE() == (this->getV() - 1)) {
-        DEBUG("Tree has |V| - 1 edges, i.e., it is a spanning tree.");
+        //DEBUG("Tree has |V| - 1 edges, i.e., it is a spanning tree.");
         break;
       }
     }

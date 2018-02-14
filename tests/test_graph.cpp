@@ -1,5 +1,7 @@
 #include "../graph.h"
 #include "gtest/gtest.h"
+
+
 namespace {
 
 // Tests basic graph construction
@@ -56,6 +58,23 @@ TEST(MSTTest, BasicKruskal) {
   EXPECT_EQ(mstg.getE(), V - 1);
   EXPECT_EQ(mstg.getDegree(1), V - 2);
   EXPECT_EQ(mstg.getSumOfEdgeWeights()[0], 13); // c(2, 3) + (|V| - 2) * 1 = 13
+}
+
+TEST(MSTTest, KruskalOnGrapherator) {
+  std::vector<std::string> files {
+    "tests/instances/graph_N50-E1225-C0-W2---UNG---CEG---RWG-RWG_1.graph",
+    "tests/instances/graph_N100-E343-C0-W2---LHSNG---DEG-STEG-WEG---RWG-RWG_4.graph",
+    "tests/instances/graph_N100-E4950-C0-W2---UNG---CEG---RWG-RWG_5.graph",
+    "tests/instances/graph_N1000-E3778-C0-W2---LHSNG---DEG-STEG-WEG---RWG-RWG_2.graph"//,
+    //"tests/instances/graph_N1000-E499500-C0-W2---UNG---CEG---RWG-RWG_2.graph"
+  };
+
+  for (auto pathToFile: files) {
+    Graph g = Graph::importFromGrapheratorFile(pathToFile);
+    Graph mst = g.getMSTKruskal(1);
+    EXPECT_EQ(mst.getV(), g.getV());
+    EXPECT_EQ(mst.getE(), g.getV() - 1);
+  }
 }
 
 } // namespace
