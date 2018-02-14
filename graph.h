@@ -359,10 +359,12 @@ public:
     std::vector<std::pair<int, std::pair<int, int>>> edgelist;
     for (int u = 1; u <= this->V; ++u) {
       for (int j = 0; j < this->adjList[u].size(); ++j) {
-        // FIXME: ugly as sin! and restricted to two weights!
-        double costs = weight * this->adjList[u][j].second.first + (1 - weight) * this->adjList[u][j].second.second;
-        // FIXME: how to remove duplicates!?
-        edgelist.push_back({costs, {u, this->adjList[u][j].first}});
+        int v = this->adjList[u][j].first;
+        if (u < v) {
+          // FIXME: ugly as sin! and restricted to two weights!
+          double costs = weight * this->adjList[u][j].second.first + (1 - weight) * this->adjList[u][j].second.second;
+          edgelist.push_back({costs, {u, v}});
+        }
       }
     }
 
