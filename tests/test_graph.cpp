@@ -62,18 +62,19 @@ TEST(MSTTest, BasicKruskal) {
 
 TEST(MSTTest, KruskalOnGrapherator) {
   std::vector<std::string> files {
-    "tests/instances/graph_N50-E1225-C0-W2---UNG---CEG---RWG-RWG_1.graph",
-    "tests/instances/graph_N100-E343-C0-W2---LHSNG---DEG-STEG-WEG---RWG-RWG_4.graph",
-    "tests/instances/graph_N100-E4950-C0-W2---UNG---CEG---RWG-RWG_5.graph",
-    "tests/instances/graph_N1000-E3778-C0-W2---LHSNG---DEG-STEG-WEG---RWG-RWG_2.graph"//,
-    //"tests/instances/graph_N1000-E499500-C0-W2---UNG---CEG---RWG-RWG_2.graph"
+    "tests/instances/graph_N100-E259-C5-W2---UNG-CLUNG---CLSTEG-CLDEG-DEG---RWG-RWG_1.graph",
+    "tests/instances/graph_N250-E729-C0-W2---UNG---DEG---RWG-RWG_1.graph",
+    "tests/instances/graph_N50-E153-C5-W2---LHSNG-CLUNG---CLDEG-CLSTEG---RWG-RWG_1.graph"
   };
 
   for (auto pathToFile: files) {
     Graph g = Graph::importFromGrapheratorFile(pathToFile);
     Graph mst = g.getMSTKruskal(1);
+    std::vector<std::vector<int>> components = mst.getConnectedComponents();
     EXPECT_EQ(mst.getV(), g.getV());
     EXPECT_EQ(mst.getE(), g.getV() - 1);
+    EXPECT_EQ(1, components.size());
+    EXPECT_EQ(g.getV(), components[0].size());
   }
 }
 
