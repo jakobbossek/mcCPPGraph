@@ -24,11 +24,47 @@ public:
     this->pc = pc;
     // vector is zero based, i.e., we add a dummy element here
     // for simplification reasons
-    this->root.reserve(n);
-    this->size.reserve(n);
+    this->root.reserve(n + 1);
+    this->size.reserve(n + 1);
     for (unsigned int i = 1; i <= n; ++i) {
       this->root[i] = i;
       this->size[i] = 1;
+    }
+  }
+
+  /**
+   * Constructor based on non-isolated sets.
+   *
+   * @param[in] n Number of elements.
+   * @param[in] sets Sets.
+   * @param[in] pc Activate path compression?
+   * @return Object of type UnionFind.
+   */
+  UnionFind(unsigned int n, std::vector<std::vector<int>> sets, bool pc = true) {
+    assert(n >= 2);
+
+    this->n = n;
+    this->nsets = sets.size();
+    this->pc = pc;
+
+    this->root.reserve(n + 1);
+    this->size.reserve(n + 1);
+
+    // now go through all sets
+    for (auto set: sets) {
+      int setroot;
+      int setSize = set.size();
+      // now go through set
+      for (int i = 0; i < setSize; ++i) {
+        // get element
+        int element = set[i];
+        // first element in set is always the root
+        if (i == 0) {
+          setroot = element;
+        }
+        this->root[element] = element;
+        this->size[element] = setSize;
+      }
     }
   }
 
