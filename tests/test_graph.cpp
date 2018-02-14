@@ -21,4 +21,15 @@ TEST(GraphTest, Basic_Methods) {
   EXPECT_EQ(4, g.getDegree(1) + 1);
 }
 
+TEST(GraphTest, ConnectedComponents) {
+  Graph g(5, 2, false);
+  std::vector<std::vector<int>> components = g.getConnectedComponents();
+  EXPECT_EQ(5, components.size());
+  g.addEdge(1, 2, 1, 1);
+  g.addEdge(1, 3, 1, 1);
+  g.addEdge(4, 5, 1, 1);
+  components = g.getConnectedComponents();
+  EXPECT_EQ(2, components.size());
+}
+
 } // namespace

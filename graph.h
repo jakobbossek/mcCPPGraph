@@ -205,7 +205,45 @@ public:
       nsel += 1;
     }
     return output;
+  }
 
+  std::vector<std::vector<int>> getConnectedComponents() const {
+    std::vector<std::vector<int>> components;
+
+    unsigned int V = this->getV();
+    std::vector<bool> visited(V + 1);
+
+    for (int node = 1; node <= V; ++node) {
+      // already visited, i.e., in some component?
+      if (visited[node])
+        continue;
+
+      // otherwise perform BFS
+      std::vector<int> queue = {node};
+      std::vector<int> component;
+
+      while (!queue.empty()) {
+        // get topmost element from queue
+        int curNode = queue.back();
+        queue.pop_back();
+
+        // mark as visited
+        visited[curNode] = true;
+
+        // add to current component
+        component.push_back(curNode);
+
+        // go through adjacency list and eventually add neighbours to queue
+        for (auto edge: this->adjList[curNode]) {
+          if (!visited[edge.first]) {
+            queue.push_back(edge.first);
+          }
+        }
+      }
+      components.push_back(component);
+    }
+
+    return components;
   }
 
   Graph getInducedSubgraph(std::vector<int> nodes) {
