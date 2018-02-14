@@ -17,8 +17,9 @@ public:
     this->V = V;
     this->E = 0;
     this->W = W;
-    this->isDirected = directed;
-    for (int i = 1; i <= V; ++i) {
+    this->directed = directed;
+    // Pay attention: we add a dummy element at position 0
+    for (int i = 0; i <= V; ++i) {
       degrees.push_back(0);
       adjList.push_back(std::vector<Edge>());
     }
@@ -36,6 +37,10 @@ public:
     return this->W;
   }
 
+  bool isDirected() const {
+    return this->directed;
+  }
+
   unsigned int getDegree(int v) const {
     assert(v >= 1 && v <= this->V);
     return this->degrees[v];
@@ -50,14 +55,14 @@ public:
     if (!this->hasEdge(u, v)) {
       this->adjList[u].push_back({v, {w1, w2}});
       this->degrees[u] += 1;
-      if (!this->isDirected) {
+      if (!this->directed) {
         this->adjList[v].push_back({u, {w1, w2}});
       }
       this->E += 1;
     }
   }
 
-  bool hasEdge(int u, int v) {
+  bool hasEdge(int u, int v) const {
     for (int i = 0; i < this->adjList[u].size(); ++i) {
       if (this->adjList[u][i].first == v)
         return true;
@@ -67,16 +72,54 @@ public:
 
   std::vector<int> getSumOfEdgeWeights() const {
     std::vector<int> sum(2);
+    sum[0] = 0;
+    sum[1] = 0;
     for (std::vector<Edge> alist: this->adjList) {
       for (Edge edge: alist) {
-        sum[1] += edge.second.first;
-        sum[2] += edge.second.second;
+        sum[0] += edge.second.first;
+        sum[1] += edge.second.second;
       }
     }
-    if (!isDirected)
-      sum[1] /= 2; sum[2] /= 2;
+    if (!this->isDirected())
+      sum[0] /= 2; sum[1] /= 2;
     return sum;
   }
+
+  static Graph getIntersectionGraph(const Graph g1, const Graph g2) {
+    // sanity checks
+    assert(g1.isDirected() == g2.isDirected());
+    assert(g1.getV() == g2.getV());
+    assert(g1.getW() == g2.getW());
+
+    int V = g1.getV();
+
+    std::cout << "Intersection of graphs with " << V << " nodes" << std::endl;
+    // bare skeleton
+    Graph g(V, g1.getW(), g1.isDirected());
+
+    std::cout << "so far" << std::endl;
+
+    // now iterate over all edges
+    // Should be possible in O(|E|)
+    unsigned int u;
+    for (u = 1; u <= V; ++u) {
+      std::cout << "u = " << u << std::endl;
+
+      for (int j = 0; j < g1.adjList[u].size(); ++j) {
+        std::cout << "j = " << j << std::endl;
+
+
+        unsigned int v = g1.adjList[u][j].first;
+        if (g2.hasEdge(u, v)) {
+          std::pair <int, int> weight = g1.adjList[u][j].second;
+          //g.addEdge(u, v, weight.first, weight.second);
+        }
+      }
+    }
+    std::cout << "Finalized" << std::endl;
+    return g;
+  }
+
 
   void removeEdge(const int u, const int v) {
     assert(u >= 1 && u <= this->V);
@@ -87,15 +130,17 @@ public:
         // this is ugly!
         this->adjList[u].erase(this->adjList[u].begin() + j);
         this->E -= 1;
+        this->degrees[u] -= 1;
         break;
       }
     }
 
-    if (!this->isDirected) {
+    if (!this->directed) {
       for (int j = 0; j < this->adjList[v].size(); ++j) {
         if (this->adjList[v][j].first == u) {
           // this is ugly!
           this->adjList[v].erase(this->adjList[v].begin() + j);
+          this->degrees[v] -= 1;
           break;
         }
       }
@@ -109,9 +154,9 @@ public:
               << W << std::endl;
     if (detailed) {
       // iterate over nodes
-      for (int u = 1; u <= this->V; ++u) {
+      for (unsigned int u = 1; u <= this->getV(); ++u) {
         // iterate over adjacency list
-        for (int j = 0; j < this->adjList[u].size(); ++j) {
+        for (unsigned int j = 0; j < this->adjList[u].size(); ++j) {
           std::cout << "c(" << u << ", " << this->adjList[u][j].first << ") = (" << this->adjList[u][j].second.first << ", " << this->adjList[u][j].second.second << ")";
           if (j == (this->adjList[u].size() - 1)) {
             std::cout << std::endl;
@@ -120,9 +165,70 @@ public:
           }
         }
       }
-      std::vector<int> sum = this->getSumOfEdgeWeights();
-      std::cout << "Sum of edge weights: c(" << sum[1] << ", " << sum[2] << ")" << std::endl;
+      // std::vector<int> sum = this->getSumOfEdgeWeights();
+      // std::cout << "Sum of edge weights: c(" << sum[1] << ", " << sum[2] << ")" << std::endl;
     }
+  }
+
+  std::vector<int> getConnectedSubtree(int startNode, unsigned int maxNodes) {
+    assert(startNode >= 1 && startNode <= this->getV());
+    assert(maxNodes >= 1 && maxNodes <= this->getV());
+
+    // we need to store node and its predecessor in BFS tree
+    std::vector<int> queue;
+    queue.push_back(startNode);
+
+    std::vector<bool> done(this->getV());
+    for (int i = 0; i <= this->getV(); ++i) {
+      done[i] = false;
+    }
+
+    std::vector<int> output;
+
+    unsigned int nsel = 0;
+
+    unsigned int curNode = -1;
+    while (nsel < maxNodes && queue.size() > 0) {
+      // get node
+      curNode = queue.back();
+      queue.pop_back();
+      output.push_back(curNode);
+      done[curNode] = true;
+
+      // access adjList and put all neighbours into queue
+      for (Edge edge: this->adjList[curNode]) {
+        // skip nodes already added
+        if (!done[edge.first]) {
+          queue.push_back(edge.first);
+        }
+      }
+      nsel += 1;
+    }
+    return output;
+
+  }
+
+  Graph getInducedSubgraph(std::vector<int> nodes) {
+    // copy constructor
+    Graph g(*this);
+
+    // which nodes should be kept
+    std::vector<bool> keep(this->getV() + 1);
+    for (auto node: nodes) {
+      keep[node] = true;
+    }
+
+    // now go through all edges and drop, if not both endpoints should be kept
+    for (unsigned int u = 1; u <= this->getV(); ++u) {
+      for (unsigned int j = 0; j < this->adjList[u].size(); ++j) {
+        unsigned int v = this->adjList[u][j].first;
+        if (!keep[u] || !keep[v]) {
+          g.removeEdge(u, v);
+        }
+      }
+    }
+
+    return g;
   }
 
   //FIXME: weight -> lambda
@@ -180,7 +286,7 @@ private:
   int V;
   int E;
   int W;
-  bool isDirected;
+  bool directed;
   std::vector<unsigned int> degrees;
   AdjacencyList adjList;
 };
