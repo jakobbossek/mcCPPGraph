@@ -52,7 +52,7 @@ public:
 
     // now go through all sets
     for (auto set: sets) {
-      int setroot;
+      int setRoot;
       int setSize = set.size();
       // now go through set
       for (int i = 0; i < setSize; ++i) {
@@ -60,9 +60,9 @@ public:
         int element = set[i];
         // first element in set is always the root
         if (i == 0) {
-          setroot = element;
+          setRoot = element;
         }
-        this->root[element] = element;
+        this->root[element] = setRoot;
         this->size[element] = setSize;
       }
     }
