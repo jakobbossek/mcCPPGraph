@@ -32,6 +32,19 @@ TEST(GraphTest, ConnectedComponents) {
   g.addEdge(4, 5, 1, 1);
   components = g.getConnectedComponents();
   EXPECT_EQ(2, components.size());
+
+  // check if grapherator graphs are connected
+  std::vector<std::string> files {
+    "tests/instances/graph_N100-E259-C5-W2---UNG-CLUNG---CLSTEG-CLDEG-DEG---RWG-RWG_1.graph",
+    "tests/instances/graph_N250-E729-C0-W2---UNG---DEG---RWG-RWG_1.graph",
+    "tests/instances/graph_N50-E153-C5-W2---LHSNG-CLUNG---CLDEG-CLSTEG---RWG-RWG_1.graph"
+  };
+
+  for (auto pathToFile: files) {
+    Graph g = Graph::importFromGrapheratorFile(pathToFile);
+    std::vector<std::vector<int>> components = g.getConnectedComponents();
+    EXPECT_EQ(1, components.size());
+  }
 }
 
 TEST(MSTTest, BasicKruskal) {
@@ -75,6 +88,22 @@ TEST(MSTTest, KruskalOnGrapherator) {
     EXPECT_EQ(mst.getE(), g.getV() - 1);
     EXPECT_EQ(1, components.size());
     EXPECT_EQ(g.getV(), components[0].size());
+
+    // now check if subforest mutation works
+    Graph mst2 = g.getMSTBySubforestMutation(mst, 10);
+    std::vector<std::vector<int>> components2 = mst2.getConnectedComponents();
+    EXPECT_EQ(mst2.getV(), g.getV());
+    EXPECT_EQ(mst2.getE(), g.getV() - 1);
+    EXPECT_EQ(1, components2.size());
+    EXPECT_EQ(g.getV(), components2[0].size());
+
+    // now check if subgraph mutation works
+    Graph mst3 = g.getMSTBySubgraphMutation(mst, 10);
+    std::vector<std::vector<int>> components3 = mst3.getConnectedComponents();
+    EXPECT_EQ(mst3.getV(), g.getV());
+    EXPECT_EQ(mst3.getE(), g.getV() - 1);
+    EXPECT_EQ(1, components3.size());
+    EXPECT_EQ(g.getV(), components3[0].size());
   }
 }
 

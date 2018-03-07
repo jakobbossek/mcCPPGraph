@@ -204,6 +204,20 @@ public:
     }
   }
 
+  bool isSpanningTree() {
+    if (this->getE() != this->getV() - 1) {
+      std::cout << "Number of edges is wrong!" << std::endl;
+      return false;
+    }
+
+    std::vector<std::vector<int>> comps = this->getConnectedComponents();
+    if (comps.size() != 1) {
+      std::cout << "ST must have 1 conn component, but has " << comps.size() << std::endl;
+    }
+
+    return (comps.size() == 1);
+  }
+
   void print(bool detailed = false) const {
     std::cout << "Weighted graph: n = "
               << V << ", m = "
@@ -340,7 +354,9 @@ public:
     assert(weight >= 0 && weight <= 1);
 
     std::vector<std::vector<int>> components = initialTree.getConnectedComponents();
+    std::cout << "Building MST from " << components.size() << " components" << std::endl;
     UnionFind UF(this->V, components);
+    UF.print();
 
     return this->getMSTKruskal(weight, initialTree, UF);
   }
@@ -396,6 +412,79 @@ public:
     }
     return initialTree;
   }
+
+  //FIXME: sample between {1, ..., maxDrop}. At the moment we just
+  // use maxDrop
+  Graph getMSTBySubforestMutation(Graph &mst, unsigned int maxDrop) {
+    assert(maxDrop <= this->getE());
+
+    Graph forest(mst);
+
+    // get IDs of ALL edges
+    std::vector<int> selEdges(forest.getE());
+    for (int i = 1; i <= forest.getE(); ++i) {
+      selEdges[i - 1] = i;
+    }
+
+    // now shuffle edges
+    std::random_shuffle(selEdges.begin(), selEdges.end());
+
+    // Remove edges from tree and build forest
+    //FIXME: this is very inefficient for dense graphs
+    /*
+    Write method removeEdges(std::vector<int> edgeIDs) which
+    expects ids and removes these edges
+    */
+    std::vector<std::pair<int, int>> edges = forest.getEdges();
+    for (int i = 0; i < maxDrop; ++i) {
+      int selectedEdgeID = selEdges[i];
+      std::pair<int, int> edge = edges[selectedEdgeID];
+      forest.removeEdge(edge.first, edge.second);
+    }
+
+    // now sample a random weight in [0, 1]
+    double rndWeight = (double)rand() / (double)RAND_MAX;
+
+    // build new spanning tree by reconnecting forest
+    Graph mst2 = this->getMSTKruskal(rndWeight, forest);
+
+    return mst2;
+  }
+
+  Graph getMSTBySubgraphMutation(Graph &mst, unsigned int maxSelect) {
+    assert(maxSelect <= this->getV());
+
+    unsigned int V = this->getV();
+
+    // get random start node
+    int rndNode = (int)(((double)rand() / (double)RAND_MAX) * V) + 1;
+
+    // get subtree reached by extraction from mst
+    std::vector<int> subtreeNodes = mst.getConnectedSubtree(rndNode, maxSelect);
+    sort(subtreeNodes.begin(), subtreeNodes.end());
+    std::vector<int> nonsubtreeNodes = std::vector<int>(V - subtreeNodes.size());
+
+    int i = 0, j = 0;
+    int curNode = 1;
+
+    while (i < nonsubtreeNodes.size()) {
+      if (curNode < subtreeNodes[j]) {
+        nonsubtreeNodes[i] = curNode;
+        i += 1;
+      } else {
+        j += 1;
+      }
+      curNode += 1;
+    }
+
+    Graph g2 = mst.getInducedSubgraph(nonsubtreeNodes);
+
+    // compute locally optimal mst on subgraph
+    double rndWeight = (double)rand() / (double)RAND_MAX;
+    Graph mst2 = this->getMSTKruskal(rndWeight, g2);
+    return mst2;
+  }
+
 private:
   int V;
   int E;
